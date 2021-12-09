@@ -26,11 +26,12 @@ def PatientList():
 @app.route('/smoker-patients')
 def SmokerPatients():
   try:
-    query = '''
-      select patientyoung.patient_id, patientyoung.smoker_years, patient.name, patient.year_old
-      from patientyoung inner join patient on patient.id = patientyoung.patient_id
-      where patientyoung.smoker = 1
-    '''
+    # query = '''
+    #   select patientyoung.patient_id, patientyoung.smoker_years, patient.name, patient.year_old
+    #   from patientyoung inner join patient on patient.id = patientyoung.patient_id
+    #   where patientyoung.smoker = 1
+    # '''
+    query = 'select patient_id from patientyoung where smoker = 1'
     cursor = assistant.connection.cursor()
     cursor.execute(query)
 
@@ -90,7 +91,7 @@ def GreaterNumberOfPatients():
     cursor = assistant.connection.cursor()
     cursor.execute(query)
 
-    return jsonify(cursor.fetchall())
+    return jsonify(cursor.fetchone())
   except Exception as exception:
     return jsonify(exception)
 
@@ -108,12 +109,6 @@ def FindPatient(history):
 @app.route('/consultations')
 def Consultations():
   try:
-    # query = '''
-    #   select consultation.id, consultation.patients_quantity,
-    #   consultation.specialist_name, consultationtype.type, consultationstate.state
-    #   from consultation inner join consultationtype on consultationtype.id = consultation.consultation_type
-    #   inner join consultationstate on consultationstate.id = consultation.consultation_state
-    # '''
     query = '''
       select * from consultation
     '''
@@ -147,7 +142,7 @@ def ReleaseConsultations():
     cursor.execute(query)
     assistant.connection.commit()
 
-    return jsonify('Consultations Modified')
+    return jsonify('Released')
   except Exception as exception:
     return jsonify(exception)
 

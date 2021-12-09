@@ -1,8 +1,10 @@
-import Base from '../functions/Base.js';
 import GenerateArray from '../functions/GererateArray.js';
 
 const Fragment = `
   <h4>Atender Paciente</h4>
+  <h4 id="availability"></h4>
+
+  <button onclick="Release()">Liberar Consultas</button>
 
   <h4>Consultas</h4>
   <table border="1">
@@ -53,7 +55,6 @@ const Fragment = `
         <th>Prioridad</th>
         <th>N° Historia Medica</th>
         <th>Riesgo</th>
-        <th>Acciones</th>
       </tr>
     </thead>
     <tbody id="pending">
@@ -64,11 +65,9 @@ const Fragment = `
   </table>
 `;
 
-const base = Base('http://localhost:5000');
-
 const LoadData = async (event) => {
   try {
-    const exist = localStorage.getItem('patients');
+    const exist = localStorage.getItem('waiting');
 
     if (!exist) {
       const kids = await base('patient-kid');
@@ -84,6 +83,7 @@ const LoadData = async (event) => {
       const pending = patients.slice(5, patients.length);
       const waiting = patients.slice(0, 5);
 
+      localStorage.setItem('availability', 10);
       localStorage.setItem('pending', JSON.stringify(pending));
       localStorage.setItem('consultations', JSON.stringify(consultations));
       localStorage.setItem('waiting', JSON.stringify(waiting));
@@ -92,6 +92,7 @@ const LoadData = async (event) => {
     setTimeout(() => {
       AppendPending();
       AppendConsultations();
+      AppendAvailability();
       AppendWaiting();
     }, 500);
   } catch (error) {
@@ -99,8 +100,15 @@ const LoadData = async (event) => {
   }
 };
 
+const AppendAvailability = () => {
+  const quantity = localStorage.getItem('availability');
+  $('#availability').html(`Disponibilidad: ${quantity}`);
+};
+
 const AppendWaiting = () => {
+  const quantity = localStorage.getItem('availability');
   const patients = JSON.parse(localStorage.getItem('waiting'));
+  const [pediatrics, urgency, CGI] = JSON.parse(localStorage.getItem('consultations'));
   const content = $('#waiting');
   content.html('');
 
@@ -117,10 +125,22 @@ const AppendWaiting = () => {
           <th>
             ${
               yearOld >= 1 && yearOld <= 15 && priority <= 4
-                ? `<button onclick="Attend(${[id, 1]})">Atender en Pediatría</button>`
+                ? ` <button ${
+                    quantity > 0 && pediatrics[4] == 2 ? `onclick="Attend(${[id, 1]})"` : 'disabled'
+                  }>
+                      Atender en Pediatría
+                    </button>`
                 : priority > 4
-                ? `<button onclick="Attend(${[id, 2]})">Atender en Urgencia</button>`
-                : `<button onclick="Attend(${[id, 3]})">Atender en CGI</button>`
+                ? ` <button ${
+                    quantity > 0 && urgency[4] == 2 ? `onclick="Attend(${[id, 2]})"` : 'disabled'
+                  }>
+                      Atender en Urgencia
+                    </button>`
+                : ` <button ${
+                    quantity > 0 && CGI[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'
+                  }>
+                      Atender en CGI
+                    </button>`
             }
           </th>
         </tr>
@@ -150,15 +170,6 @@ const AppendPending = async () => {
           <td>${priority}</td>
           <td>${historyNumber}</td>
           <td>${risk}</td>
-          <th>
-            ${
-              yearOld >= 1 && yearOld <= 15 && priority <= 4
-                ? `<button onclick="Attend(${[id, 1]})">Atender en Pediatría</button>`
-                : priority > 4
-                ? `<button onclick="Attend(${[id, 2]})">Atender en Urgencia</button>`
-                : `<button onclick="Attend(${[id, 3]})">Atender en CGI</button>`
-            }
-          </th>
         </tr>
       `);
     });
@@ -203,26 +214,32 @@ const AppendConsultations = async () => {
 };
 
 const Attend = async (patient, type) => {
-  const result = await base(`new-consultation/${type}`);
+  const quantity = localStorage.getItem('availability');
 
-  if (result == 'Added') {
-    const waiting = JSON.parse(localStorage.getItem('waiting'));
-    const pending = JSON.parse(localStorage.getItem('pending'));
+  if (quantity > 0) {
+    const result = await base(`new-consultation/${type}`);
 
-    const consultations = await base('consultations');
-    const newWaiting = waiting.filter(({ id }) => id != patient);
+    if (result == 'Added') {
+      const waiting = JSON.parse(localStorage.getItem('waiting'));
+      const pending = JSON.parse(localStorage.getItem('pending'));
 
-    if (pending.length > 0) {
-      newWaiting.push(pending.shift());
+      const consultations = await base('consultations');
+      const newWaiting = waiting.filter(({ id }) => id != patient);
+
+      if (pending.length > 0) {
+        newWaiting.push(pending.shift());
+      }
+
+      localStorage.setItem('availability', quantity - 1);
+      localStorage.setItem('pending', JSON.stringify(pending));
+      localStorage.setItem('consultations', JSON.stringify(consultations));
+      localStorage.setItem('waiting', JSON.stringify(newWaiting));
+
+      AppendPending();
+      AppendAvailability();
+      AppendConsultations();
+      AppendWaiting();
     }
-
-    localStorage.setItem('pending', JSON.stringify(pending));
-    localStorage.setItem('consultations', JSON.stringify(consultations));
-    localStorage.setItem('waiting', JSON.stringify(newWaiting));
-
-    AppendPending();
-    AppendConsultations();
-    AppendWaiting();
   }
 };
 
@@ -232,8 +249,22 @@ const Finalize = async (type) => {
   if (result == 'Modified') {
     const consultations = await base('consultations');
     localStorage.setItem('consultations', JSON.stringify(consultations));
+
     AppendConsultations();
+    AppendWaiting();
   }
 };
 
-export default { Fragment, LoadData, Attend, Finalize };
+const Release = async () => {
+  const result = await base('release-consultations');
+
+  if (result == 'Released') {
+    const consultations = await base('consultations');
+    localStorage.setItem('consultations', JSON.stringify(consultations));
+
+    AppendConsultations();
+    AppendWaiting();
+  }
+};
+
+export default { Fragment, LoadData, Attend, Finalize, Release };

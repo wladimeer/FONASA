@@ -1,8 +1,9 @@
-import routes from './routers/app.routes.js';
+import Routes from './routers/app.routes.js';
+import Base from './functions/Base.js';
 
-routes(window.location.hash);
+window.base = Base('http://localhost:5000');
+Routes(window.location.hash);
 
 $(window).on('hashchange', function (event) {
-  routes(window.location.hash);
-  event.preventDefault();
+  Routes(window.location.hash);
 });
