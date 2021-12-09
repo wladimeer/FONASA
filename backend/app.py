@@ -1,11 +1,11 @@
+from logging import exception
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
-from types import MethodType
 from flask_cors import CORS
 from config import Config
 
 app = Flask(__name__)
-conexion = MySQL(app)
+assistant = MySQL(app)
 CORS(app)
 
 @app.route('/')
@@ -16,33 +16,10 @@ def Principal():
 def PatientList():
   try:
     query = 'select * from patient'
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
     cursor.execute(query)
 
     return jsonify(cursor.fetchall())
-  except Exception as exception:
-    return jsonify(exception)
-
-@app.route('/greater-number-of-patients')
-def GreaterNumberOfPatients():
-  try:
-    query = 'select * from consultation order by patients_quantity desc limit 1'
-    cursor = conexion.connection.cursor()
-    cursor.execute(query)
-
-    return jsonify(cursor.fetchall())
-  except Exception as exception:
-    return jsonify(exception)
-
-@app.route('/release-consultations')
-def ReleaseConsultations():
-  try:
-    query = 'update consultation set consultation_state = 2'
-    cursor = conexion.connection.cursor()
-    cursor.execute(query)
-    conexion.connection.commit()
-
-    return jsonify('Consultations Modified')
   except Exception as exception:
     return jsonify(exception)
 
@@ -54,7 +31,7 @@ def SmokerPatients():
       from patientyoung inner join patient on patient.id = patientyoung.patient_id
       where patientyoung.smoker = 1
     '''
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
     cursor.execute(query)
 
     return jsonify(cursor.fetchall())
@@ -69,7 +46,7 @@ def PatientKid():
       patient.name, patient.year_old, patient.medical_history_number
       from patientkid inner join patient on patient.id = patientkid.patient_id
     '''
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
     cursor.execute(query)
 
     return jsonify(cursor.fetchall())
@@ -84,7 +61,7 @@ def PatientYoung():
       patientyoung.smoker_years, patient.name, patient.year_old, patient.medical_history_number
       from patientyoung inner join patient on patient.id = patientyoung.patient_id
     '''
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
     cursor.execute(query)
 
     return jsonify(cursor.fetchall())
@@ -99,7 +76,18 @@ def PatientOld():
       patient.name, patient.year_old, patient.medical_history_number
       from patientold inner join patient on patient.id = patientold.patient_id
     '''
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
+    cursor.execute(query)
+
+    return jsonify(cursor.fetchall())
+  except Exception as exception:
+    return jsonify(exception)
+
+@app.route('/greater-number-of-patients')
+def GreaterNumberOfPatients():
+  try:
+    query = 'select * from consultation order by patients_quantity desc limit 1'
+    cursor = assistant.connection.cursor()
     cursor.execute(query)
 
     return jsonify(cursor.fetchall())
@@ -110,37 +98,75 @@ def PatientOld():
 def FindPatient(history):
   try:
     query = 'select * from patient where medical_history_number = {0}'
-    cursor = conexion.connection.cursor()
+    cursor = assistant.connection.cursor()
     cursor.execute(query.format(history))
 
     return jsonify(cursor.fetchone())
   except Exception as exception:
     return jsonify(exception)
 
-@app.route('/new-consultation', methods=['POST'])
-def NewConsultation():
+@app.route('/consultations')
+def Consultations():
   try:
-    patients_quantity = request.json['patients_quantity']
-    consultation_state = request.json['consultation_state']
-    consultation_type = request.json['consultation_type']
-    specialist_name = request.json['specialist_name']
-
+    # query = '''
+    #   select consultation.id, consultation.patients_quantity,
+    #   consultation.specialist_name, consultationtype.type, consultationstate.state
+    #   from consultation inner join consultationtype on consultationtype.id = consultation.consultation_type
+    #   inner join consultationstate on consultationstate.id = consultation.consultation_state
+    # '''
     query = '''
-      insert into Consultation(patients_quantity, specialist_name, consultation_type, consultation_state)
-      values(%s, %s, %s, %s)
+      select * from consultation
     '''
-    cursor = conexion.connection.cursor()
-    cursor.execute(query, (patients_quantity, specialist_name, consultation_type, consultation_state))
-    conexion.connection.commit()
+    cursor = assistant.connection.cursor()
+    cursor.execute(query)
+
+    return jsonify(cursor.fetchall())
+  except Exception as exception:
+    return jsonify(exception)
+
+@app.route('/new-consultation/<string:type>')
+def NewConsultation(type):
+  try:
+    query = '''
+      update consultation set patients_quantity = patients_quantity + 1, consultation_state = 1
+      where consultation_type = {0}
+    '''
+    cursor = assistant.connection.cursor()
+    cursor.execute(query.format(type))
+    assistant.connection.commit()
 
     return jsonify('Added')
   except Exception as exception:
     return jsonify(exception)
 
-def NotFound():
+@app.route('/release-consultations')
+def ReleaseConsultations():
+  try:
+    query = 'update consultation set consultation_state = 2'
+    cursor = assistant.connection.cursor()
+    cursor.execute(query)
+    assistant.connection.commit()
+
+    return jsonify('Consultations Modified')
+  except Exception as exception:
+    return jsonify(exception)
+
+@app.route('/finalize-consultation/<string:type>')
+def FinalizeConsultation(type):
+  try:
+    query = 'update consultation set consultation_state = 2 where consultation_type = {0}'
+    cursor = assistant.connection.cursor()
+    cursor.execute(query.format(type))
+    assistant.connection.commit()
+
+    return jsonify('Modified')
+  except Exception as exception:
+    return jsonify(exception)
+
+def ResourceNotFound():
   return jsonify('Resource Not Found')
 
 if __name__ == '__main__':
   app.config.from_object(Config['development'])
-  app.register_error_handler(404, NotFound)
+  app.register_error_handler(404, ResourceNotFound)
   app.run()

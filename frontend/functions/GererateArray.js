@@ -31,7 +31,7 @@ export default function (kids, youngs, olds) {
     const [id, assignedDiet, name, yearOld, historyNumber] = value;
 
     if (assignedDiet == 1 && yearOld >= 60 && yearOld <= 100) {
-      array.push({ id, priority: Math.round(yearOld / 20 + 1), name, yearOld, historyNumber });
+      array.push({ id, priority: Math.round(yearOld / 20 + 4), name, yearOld, historyNumber });
     } else {
       array.push({ id, priority: Math.round(yearOld / 30 + 3), name, yearOld, historyNumber });
     }
@@ -41,8 +41,8 @@ export default function (kids, youngs, olds) {
     id,
     risk:
       yearOld >= 41
-        ? Number(((yearOld * priority) / 100).toFixed(1))
-        : Number(((yearOld * priority) / 100 + 5.3).toFixed(1)),
+        ? Number(((yearOld * priority) / 100 + 5.3).toFixed(1))
+        : Number(((yearOld * priority) / 100).toFixed(1)),
     historyNumber,
     priority,
     yearOld,
