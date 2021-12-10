@@ -3,7 +3,6 @@ const Fragment = `
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Especialista</th>
         <th>Total de Pacientes</th>
         <th>Tipo de Consulta</th>
@@ -26,7 +25,6 @@ const LoadData = async () => {
 
     content.html(`
       <tr>
-        <td>${id}</td>
         <td>${specialist}</td>
         <td>${patients}</td>
         <td>${type == 1 ? 'Pediatría' : type == 2 ? 'Urgencia' : 'Consulta General Integral'}</td>

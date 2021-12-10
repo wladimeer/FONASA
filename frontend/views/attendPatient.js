@@ -5,12 +5,12 @@ const Fragment = `
   <h4 id="availability"></h4>
 
   <button onclick="Release()">Liberar Consultas</button>
+  <button onclick="Optimize()">Optimizar Atención</button>
 
   <h4>Consultas</h4>
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Especialista</th>
         <th>Total de Pacientes</th>
         <th>Tipo de Consulta</th>
@@ -29,7 +29,6 @@ const Fragment = `
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Nombre</th>
         <th>Edad</th>
         <th>Prioridad</th>
@@ -49,7 +48,6 @@ const Fragment = `
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Nombre</th>
         <th>Edad</th>
         <th>Prioridad</th>
@@ -109,6 +107,9 @@ const AppendWaiting = () => {
   const quantity = localStorage.getItem('availability');
   const patients = JSON.parse(localStorage.getItem('waiting'));
   const [pediatrics, urgency, CGI] = JSON.parse(localStorage.getItem('consultations'));
+  const older = patients.find(
+    ({ yearOld }) => yearOld == Math.max(...patients.map(({ yearOld }) => yearOld))
+  );
   const content = $('#waiting');
   content.html('');
 
@@ -116,8 +117,7 @@ const AppendWaiting = () => {
     patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
       content.append(`
         <tr>
-          <td>${id}</td>
-          <td>${name}</td>
+          <td>${older.name == name && older.yearOld >= 41 ? name + ' (Más Anciano)' : name}</td>
           <td>${yearOld}</td>
           <td>${priority}</td>
           <td>${historyNumber}</td>
@@ -139,7 +139,7 @@ const AppendWaiting = () => {
                 : ` <button ${
                     quantity > 0 && CGI[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'
                   }>
-                      Atender en CGI
+                      Atender en Consulta General Integral
                     </button>`
             }
           </th>
@@ -149,7 +149,7 @@ const AppendWaiting = () => {
   } else {
     content.append(`
       <tr>
-        <td colspan="7">No se Encontraron Datos</td>
+        <td colspan="7">Sin Pacientes Todavía</td>
       </tr>
     `);
   }
@@ -164,7 +164,6 @@ const AppendPending = async () => {
     patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
       content.append(`
         <tr>
-          <td>${id}</td>
           <td>${name}</td>
           <td>${yearOld}</td>
           <td>${priority}</td>
@@ -176,7 +175,7 @@ const AppendPending = async () => {
   } else {
     content.append(`
       <tr>
-        <td colspan="7">No se Encontraron Datos</td>
+        <td colspan="7">Sin Pacientes Todavía</td>
       </tr>
     `);
   }
@@ -191,7 +190,6 @@ const AppendConsultations = async () => {
     consultations.forEach(([id, quantity, specialist, type, state]) => {
       content.append(`
         <tr>
-          <td>${id}</td>
           <td>${specialist}</td>
           <td>${quantity}</td>
           <td>${type == 1 ? 'Pediatría' : type == 2 ? 'Urgencia' : 'Consulta General Integral'}</td>
@@ -207,7 +205,7 @@ const AppendConsultations = async () => {
   } else {
     content.append(`
       <tr>
-        <td colspan="6">No se Encontraron Datos</td>
+        <td colspan="6">Sin Consultas Todavía</td>
       </tr>
     `);
   }
@@ -267,4 +265,8 @@ const Release = async () => {
   }
 };
 
-export default { Fragment, LoadData, Attend, Finalize, Release };
+const Optimize = () => {
+  console.log('working...');
+};
+
+export default { Fragment, LoadData, Attend, Finalize, Release, Optimize };

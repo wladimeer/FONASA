@@ -5,11 +5,7 @@ const Fragment = `
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Nombre</th>
-        <th>Edad</th>
-        <th>Prioridad</th>
-        <th>Riesgo</th>
       </tr>
     </thead>
     <tbody id="patients">
@@ -32,17 +28,15 @@ const LoadData = async () => {
   const patients = GenerateArray(kids, youngs, olds);
 
   smokers.forEach(([smokerId]) => {
-    const patient = patients.find(({ id }) => id == smokerId);
+    const patient = patients.find(({ id, priority }) => id == smokerId);
 
-    content.append(`
-      <tr>
-        <td>${patient.id}</td>
-        <td>${patient.name}</td>
-        <td>${patient.yearOld}</td>
-        <td>${patient.priority}</td>
-        <td>${patient.risk}</td>        
-      </tr>
-    `);
+    if (patient.priority > 4) {
+      content.append(`
+        <tr>
+          <td>${patient.name}</td>    
+        </tr>
+      `);
+    }
   });
 };
 

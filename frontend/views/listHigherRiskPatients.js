@@ -9,7 +9,6 @@ const Fragment = `
   <table border="1">
     <thead>
       <tr>
-        <th>#</th>
         <th>Nombre</th>
         <th>Prioridad</th>
         <th>N° Historia Medica</th>
@@ -60,7 +59,6 @@ const AppendData = (newArray) => {
     newArray.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
       list.append(`
         <tr>
-          <td>${id}</td>
           <td>${name}</td>
           <td>${priority}</td>
           <td>${historyNumber}</td>
