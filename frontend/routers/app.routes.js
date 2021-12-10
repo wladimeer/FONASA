@@ -16,6 +16,7 @@ const routes = (route) => {
       AttendPatient.LoadData();
       window.Attend = AttendPatient.Attend;
       window.Finalize = AttendPatient.Finalize;
+      window.AllowAccess = AttendPatient.AllowAccess;
       window.Optimize = AttendPatient.Optimize;
       window.Release = AttendPatient.Release;
       content.html(AttendPatient.Fragment);

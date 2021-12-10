@@ -6,6 +6,7 @@ const Fragment = `
 
   <button onclick="Release()">Liberar Consultas</button>
   <button onclick="Optimize()">Optimizar Atención</button>
+  <button onclick="AllowAccess()">Hacer Pasar a Sala de Espera</button>
 
   <h4>Consultas</h4>
   <table border="1">
@@ -39,7 +40,7 @@ const Fragment = `
     </thead>
     <tbody id="waiting">
       <tr>
-        <td colspan="7">No se Encontraron Datos</td>
+        <td colspan="7">Sin Pacientes en la Sala</td>
       </tr>
     </tbody>
   </table>
@@ -65,7 +66,7 @@ const Fragment = `
 
 const LoadData = async (event) => {
   try {
-    const exist = localStorage.getItem('waiting');
+    const exist = localStorage.getItem('pending');
 
     if (!exist) {
       const kids = await base('patient-kid');
@@ -74,17 +75,13 @@ const LoadData = async (event) => {
 
       const consultations = await base('consultations');
 
-      const patients = GenerateArray(kids, youngs, olds).sort((a, b) => {
+      const pending = GenerateArray(kids, youngs, olds).sort((a, b) => {
         return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0;
       });
 
-      const pending = patients.slice(5, patients.length);
-      const waiting = patients.slice(0, 5);
-
-      localStorage.setItem('availability', 10);
       localStorage.setItem('pending', JSON.stringify(pending));
       localStorage.setItem('consultations', JSON.stringify(consultations));
-      localStorage.setItem('waiting', JSON.stringify(waiting));
+      localStorage.setItem('availability', 10);
     }
 
     setTimeout(() => {
@@ -105,15 +102,16 @@ const AppendAvailability = () => {
 
 const AppendWaiting = () => {
   const quantity = localStorage.getItem('availability');
-  const patients = JSON.parse(localStorage.getItem('waiting'));
+  const patients = JSON.parse(localStorage.getItem('waiting')) ?? [];
   const [pediatrics, urgency, CGI] = JSON.parse(localStorage.getItem('consultations'));
-  const older = patients.find(
-    ({ yearOld }) => yearOld == Math.max(...patients.map(({ yearOld }) => yearOld))
-  );
   const content = $('#waiting');
   content.html('');
 
   if (patients.length != 0) {
+    const older = patients.find(
+      ({ yearOld }) => yearOld == Math.max(...patients.map(({ yearOld }) => yearOld))
+    );
+
     patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
       content.append(`
         <tr>
@@ -211,6 +209,29 @@ const AppendConsultations = async () => {
   }
 };
 
+const AllowAccess = async () => {
+  const waitingList = JSON.parse(localStorage.getItem('waiting')) ?? [];
+  const pendingList = JSON.parse(localStorage.getItem('pending')) ?? [];
+  let waiting = [];
+  let pending = [];
+
+  if (waitingList.length == 0) {
+    if (pendingList.length >= 5) {
+      waiting = pendingList.slice(0, 5);
+      pending = pendingList.slice(5, pendingList.length);
+    } else {
+      waiting = pendingList.slice(0, pendingList.length);
+      pending = [];
+    }
+
+    localStorage.setItem('waiting', JSON.stringify(waiting));
+    localStorage.setItem('pending', JSON.stringify(pending));
+
+    AppendPending();
+    AppendWaiting();
+  }
+};
+
 const Attend = async (patient, type) => {
   const quantity = localStorage.getItem('availability');
 
@@ -219,17 +240,11 @@ const Attend = async (patient, type) => {
 
     if (result == 'Added') {
       const waiting = JSON.parse(localStorage.getItem('waiting'));
-      const pending = JSON.parse(localStorage.getItem('pending'));
 
       const consultations = await base('consultations');
       const newWaiting = waiting.filter(({ id }) => id != patient);
 
-      if (pending.length > 0) {
-        newWaiting.push(pending.shift());
-      }
-
       localStorage.setItem('availability', quantity - 1);
-      localStorage.setItem('pending', JSON.stringify(pending));
       localStorage.setItem('consultations', JSON.stringify(consultations));
       localStorage.setItem('waiting', JSON.stringify(newWaiting));
 
@@ -266,7 +281,24 @@ const Release = async () => {
 };
 
 const Optimize = () => {
-  console.log('working...');
+  const pendingList = JSON.parse(localStorage.getItem('pending')) ?? [];
+
+  if (pendingList.length > 0) {
+    const graves = pendingList.filter(({ priority }) => priority > 4);
+    const ninosyadultos = pendingList.filter(
+      ({ yearOld, priority }) =>
+        (priority <= 4 && yearOld >= 1 && yearOld <= 15) || (priority <= 4 && yearOld >= 41)
+    );
+    const youngs = pendingList.filter(
+      ({ yearOld, priority }) => yearOld >= 16 && yearOld <= 40 && priority <= 4
+    );
+
+    const array = [...graves, ...ninosyadultos, ...youngs];
+    localStorage.setItem('pending', JSON.stringify(array));
+
+    AppendPending();
+    Release();
+  }
 };
 
-export default { Fragment, LoadData, Attend, Finalize, Release, Optimize };
+export default { Fragment, LoadData, Attend, Finalize, Release, Optimize, AllowAccess };
