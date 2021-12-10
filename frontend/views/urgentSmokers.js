@@ -1,5 +1,3 @@
-import GenerateArray from '../functions/GererateArray.js';
-
 const Fragment = `
   <h4>Pacientes Fumadores Urgentes</h4>
   <table border="1">
@@ -10,34 +8,31 @@ const Fragment = `
     </thead>
     <tbody id="patients">
       <tr>
-        <td colspan="7">No se Encontraron Datos</td>
+        <td colspan="7">No se Encontraron Pacientes</td>
       </tr>
     </tbody>
   </table>
+  <h2 id="name"></h2>
 `;
 
-const LoadData = async () => {
-  const smokers = await base('smoker-patients');
+const LoadData = () => {
   const content = $('#patients');
-  content.html('');
 
-  const kids = await base('patient-kid');
-  const youngs = await base('patient-young');
-  const olds = await base('patient-old');
+  if (smokers.length > 0) {
+    content.html('');
 
-  const patients = GenerateArray(kids, youngs, olds);
+    smokers.forEach(([smokerId]) => {
+      const patient = patients.find(({ id }) => id == smokerId);
 
-  smokers.forEach(([smokerId]) => {
-    const patient = patients.find(({ id, priority }) => id == smokerId);
-
-    if (patient.priority > 4) {
-      content.append(`
-        <tr>
-          <td>${patient.name}</td>    
-        </tr>
-      `);
-    }
-  });
+      if (patient.priority > 4) {
+        content.append(`
+          <tr>
+            <td>${patient.name}</td>
+          </tr>
+        `);
+      }
+    });
+  }
 };
 
 export default { Fragment, LoadData };

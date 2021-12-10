@@ -1,5 +1,6 @@
 const Fragment = `
   <h4>Consulta con Mayor Cantidad de Pacientes</h4>
+
   <table border="1">
     <thead>
       <tr>
@@ -21,12 +22,12 @@ const LoadData = async () => {
   const content = $('#consultations');
 
   if (consultations.length > 0) {
-    const [id, patients, specialist, type] = consultations;
+    const [_, totalPatients, specialist, type] = consultations;
 
     content.html(`
       <tr>
         <td>${specialist}</td>
-        <td>${patients}</td>
+        <td>${totalPatients}</td>
         <td>${type == 1 ? 'Pediatría' : type == 2 ? 'Urgencia' : 'Consulta General Integral'}</td>
       </tr>
     `);

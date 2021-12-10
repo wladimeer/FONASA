@@ -13,25 +13,25 @@ const routes = (route) => {
       content.html(Principal.Fragment);
       break;
     case '#attend-patient':
-      AttendPatient.LoadData();
+      content.html(AttendPatient.Fragment);
       window.Attend = AttendPatient.Attend;
       window.Finalize = AttendPatient.Finalize;
       window.AllowAccess = AttendPatient.AllowAccess;
       window.Optimize = AttendPatient.Optimize;
       window.Release = AttendPatient.Release;
-      content.html(AttendPatient.Fragment);
+      AttendPatient.LoadData();
       break;
     case '#higher-risk-patients':
-      window.LoadData = HigherRiskPatients.LoadData;
       content.html(HigherRiskPatients.Fragment);
+      window.LoadData = HigherRiskPatients.LoadData;
       break;
     case '#urgent-smokers':
-      UrgentSmokers.LoadData();
       content.html(UrgentSmokers.Fragment);
+      UrgentSmokers.LoadData();
       break;
     case '#greater-number-patients':
-      GreaterNumberPatients.LoadData();
       content.html(GreaterNumberPatients.Fragment);
+      GreaterNumberPatients.LoadData();
       break;
     default:
       content.html(ErrorPage404.Fragment);

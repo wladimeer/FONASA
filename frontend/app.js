@@ -1,8 +1,13 @@
 import Routes from './routers/app.routes.js';
-import Base from './functions/Base.js';
+import LoadDatas from './functions/LoadDatas.js';
 
-window.base = Base('http://localhost:5000');
-Routes(window.location.hash);
+LoadDatas()
+  .then(() => {
+    Routes(window.location.hash);
+  })
+  .catch(() => {
+    console.log('Not Datas');
+  });
 
 $(window).on('hashchange', function (event) {
   Routes(window.location.hash);
