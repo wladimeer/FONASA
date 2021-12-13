@@ -1,4 +1,3 @@
-from logging import exception
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from flask_cors import CORS
@@ -26,11 +25,6 @@ def PatientList():
 @app.route('/smoker-patients')
 def SmokerPatients():
   try:
-    # query = '''
-    #   select patientyoung.patient_id, patientyoung.smoker_years, patient.name, patient.year_old
-    #   from patientyoung inner join patient on patient.id = patientyoung.patient_id
-    #   where patientyoung.smoker = 1
-    # '''
     query = 'select patient_id from patientyoung where smoker = 1'
     cursor = assistant.connection.cursor()
     cursor.execute(query)
