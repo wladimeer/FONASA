@@ -54,17 +54,25 @@ const AppendData = (patients) => {
   const patientsAtRisk = $('#patientsAtRisk');
   patientsAtRisk.html('');
 
-  patients.forEach(({ name, priority, historyNumber, risk, yearOld }) => {
-    patientsAtRisk.append(`
+  if (patients.length > 0) {
+    patients.forEach(({ name, priority, historyNumber, risk, yearOld }) => {
+      patientsAtRisk.append(`
+        <tr>
+          <td>${name}</td>
+          <td>${priority}</td>
+          <td>${historyNumber}</td>
+          <td>${risk}</td>
+          <td>${yearOld}</td>
+        </tr>
+      `);
+    });
+  } else {
+    patientsAtRisk.html(`
       <tr>
-        <td>${name}</td>
-        <td>${priority}</td>
-        <td>${historyNumber}</td>
-        <td>${risk}</td>
-        <td>${yearOld}</td>
+        <td colspan="6">No se Encontraron Coincidencias</td>
       </tr>
     `);
-  });
+  }
 };
 
 export default { Fragment, LoadData };
