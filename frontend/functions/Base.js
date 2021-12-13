@@ -1,4 +1,4 @@
-export default (domain) => async (resource) => {
+const Base = (domain) => async (resource) => {
   const url = `${domain}/${resource}`;
 
   try {
@@ -8,3 +8,5 @@ export default (domain) => async (resource) => {
     return response;
   }
 };
+
+export default Base;

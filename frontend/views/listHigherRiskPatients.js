@@ -1,36 +1,45 @@
 const Fragment = `
-  <h4>Pacientes con Mayor Riesgo</h4>
-  
-  <input type="number" onkeyup="LoadData(this.value)")>
-  
-  <table border="1">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Prioridad</th>
-        <th>N° Historia Medica</th>
-        <th>Riesgo</th>
-        <th>Edad</th>
-      </tr>
-    </thead>
-    <tbody id="list">
-      <tr>
-        <td colspan="6">Esperando Numero de Historia</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Pacientes Riesgosos</h5>
+
+      <div class="mb-5">
+        <label for="historyNumber" class="form-label">Numero de Historia</label>
+        <input type="number" class="form-control" id="historyNumber" onkeyup="LoadData(this.value)")>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Prioridad</th>
+              <th>Historia</th>
+              <th>Riesgo</th>
+              <th>Edad</th>
+            </tr>
+          </thead>
+          <tbody id="patientsAtRisk">
+            <tr>
+              <td colspan="6">Esperando Numero de Historia</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 `;
 
 const LoadData = async (value) => {
   try {
     const patientFind = await base(`find-patient/${Number(value)}`);
-    const list = $('#list');
+    const patientsAtRisk = $('#patientsAtRisk');
 
     if (patientFind != null) {
       const patientFound = patients.find(({ id }) => id == patientFind[0]);
       AppendData(patients.filter(({ risk }) => risk > patientFound.risk));
     } else {
-      list.html(`
+      patientsAtRisk.html(`
         <tr>
           <td colspan="6">No se Encontraron Coincidencias</td>
         </tr>
@@ -42,29 +51,20 @@ const LoadData = async (value) => {
 };
 
 const AppendData = (patients) => {
-  const list = $('#list');
+  const patientsAtRisk = $('#patientsAtRisk');
+  patientsAtRisk.html('');
 
-  if (patients.length != 0) {
-    list.html('');
-
-    patients.forEach(({ name, priority, historyNumber, risk, yearOld }) => {
-      list.append(`
-        <tr>
-          <td>${name}</td>
-          <td>${priority}</td>
-          <td>${historyNumber}</td>
-          <td>${risk}</td>
-          <td>${yearOld}</td>
-        </tr>
-      `);
-    });
-  } else {
-    list.html(`
+  patients.forEach(({ name, priority, historyNumber, risk, yearOld }) => {
+    patientsAtRisk.append(`
       <tr>
-        <td colspan="6">No se Encontraron Coincidencias</td>
+        <td>${name}</td>
+        <td>${priority}</td>
+        <td>${historyNumber}</td>
+        <td>${risk}</td>
+        <td>${yearOld}</td>
       </tr>
     `);
-  }
+  });
 };
 
 export default { Fragment, LoadData };

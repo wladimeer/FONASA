@@ -1,36 +1,33 @@
 const Fragment = `
-  <h4>Pacientes Fumadores Urgentes</h4>
-  <table border="1">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-      </tr>
-    </thead>
-    <tbody id="patients">
-      <tr>
-        <td colspan="7">No se Encontraron Pacientes</td>
-      </tr>
-    </tbody>
-  </table>
-  <h2 id="name"></h2>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Fumadores Urgentes</h5>
+
+      <table class="table table-hover">
+        <thead>
+          <tr class="text-start">
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody id="urgentPatients">
+          <tr>
+            <td colspan="1">No se Encontraron Datos</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 `;
 
 const LoadData = () => {
-  const content = $('#patients');
+  const content = $('#urgentPatients');
 
   if (smokers.length > 0) {
     content.html('');
 
     smokers.forEach(([smokerId]) => {
-      const patient = patients.find(({ id }) => id == smokerId);
-
-      if (patient.priority > 4) {
-        content.append(`
-          <tr>
-            <td>${patient.name}</td>
-          </tr>
-        `);
-      }
+      const { name, priority } = patients.find(({ id }) => id == smokerId);
+      priority > 4 ? content.append(`<tr><td>${name}</td></tr>`) : null;
     });
   }
 };
