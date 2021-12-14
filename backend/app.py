@@ -20,7 +20,7 @@ def PatientList():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/smoker-patients')
 def SmokerPatients():
@@ -31,7 +31,7 @@ def SmokerPatients():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/patient-kid')
 def PatientKid():
@@ -46,7 +46,7 @@ def PatientKid():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/patient-young')
 def PatientYoung():
@@ -61,7 +61,7 @@ def PatientYoung():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/patient-old')
 def PatientOld():
@@ -76,7 +76,7 @@ def PatientOld():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/greater-number-of-patients')
 def GreaterNumberOfPatients():
@@ -87,7 +87,7 @@ def GreaterNumberOfPatients():
 
     return jsonify(cursor.fetchone())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/find-patient/<string:history>')
 def FindPatient(history):
@@ -98,7 +98,7 @@ def FindPatient(history):
 
     return jsonify(cursor.fetchone())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/consultations')
 def Consultations():
@@ -111,7 +111,7 @@ def Consultations():
 
     return jsonify(cursor.fetchall())
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/new-consultation/<string:type>')
 def NewConsultation(type):
@@ -126,7 +126,7 @@ def NewConsultation(type):
 
     return jsonify('Added')
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/release-consultations')
 def ReleaseConsultations():
@@ -138,7 +138,7 @@ def ReleaseConsultations():
 
     return jsonify('Released')
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 @app.route('/finalize-consultation/<string:type>')
 def FinalizeConsultation(type):
@@ -150,7 +150,7 @@ def FinalizeConsultation(type):
 
     return jsonify('Modified')
   except Exception as exception:
-    return jsonify(exception)
+    return jsonify(exception.args)
 
 def ResourceNotFound():
   return jsonify('Resource Not Found')
