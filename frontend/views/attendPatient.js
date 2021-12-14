@@ -3,11 +3,7 @@ const Fragment = `
     <div class="card-body">
       <h5 class="card-title text-center mb-4">Atender Paciente</h5>
       
-      <div class="row justify-content-between">
-        <div class="col">
-          <h5>Disponibilidad: <span id="availability"></span></h5>
-        </div>
-
+      <div class="row justify-content-center">
         <div class="btn-group col-12">
           <button onclick="Release()" class="btn btn-secondary">Liberar Consultas</button>
           <button onclick="Optimize()" class="btn btn-secondary">Optimizar Atención</button>
@@ -86,27 +82,19 @@ const LoadData = () => {
     if (!exist) {
       const pending = [...patients].sort((a, b) => (a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0));
 
-      localStorage.setItem('availability', 10);
       localStorage.setItem('consultations', JSON.stringify(consultations));
       localStorage.setItem('pending', JSON.stringify(pending));
     }
 
     AppendPending();
     AppendConsultations();
-    AppendAvailability();
     AppendWaiting();
   } catch (error) {
     console.log(error);
   }
 };
 
-const AppendAvailability = () => {
-  const quantity = localStorage.getItem('availability');
-  $('#availability').html(quantity);
-};
-
 const AppendWaiting = () => {
-  const quantity = localStorage.getItem('availability');
   const consultations = JSON.parse(localStorage.getItem('consultations'));
   const patients = JSON.parse(localStorage.getItem('waiting')) ?? [];
 
@@ -121,21 +109,21 @@ const AppendWaiting = () => {
 
     patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
       const urgency = `
-        <button ${quantity > 0 && urgencyType[4] == 2 ? `onclick="Attend(${[id, 2]})"` : 'disabled'}
+        <button ${urgencyType[4] == 2 ? `onclick="Attend(${[id, 2]})"` : 'disabled'}
           class="btn btn-success"
         >
           Atender en Urgencia
         </button>`;
 
       const pediatrics = `
-        <button ${quantity > 0 && pediatricsType[4] == 2 ? `onclick="Attend(${[id, 1]})"` : 'disabled'}
+        <button ${pediatricsType[4] == 2 ? `onclick="Attend(${[id, 1]})"` : 'disabled'}
           class="btn btn-success"
         >
           Atender en Pediatría
         </button>`;
 
       const general = `
-        <button ${quantity > 0 && generalType[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'}
+        <button ${generalType[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'}
           class="btn btn-success"
         >
           Atender en General Integral
@@ -247,25 +235,19 @@ const AllowAccess = () => {
 
 const Attend = async (patient, type) => {
   try {
-    const quantity = localStorage.getItem('availability');
+    const result = await base(`new-consultation/${type}`);
 
-    if (quantity > 0) {
-      const result = await base(`new-consultation/${type}`);
+    if (result == 'Added') {
+      const consultations = await base('consultations');
 
-      if (result == 'Added') {
-        const consultations = await base('consultations');
+      const waiting = JSON.parse(localStorage.getItem('waiting'));
+      const newWaiting = waiting.filter(({ id }) => id != patient);
 
-        const waiting = JSON.parse(localStorage.getItem('waiting'));
-        const newWaiting = waiting.filter(({ id }) => id != patient);
+      localStorage.setItem('consultations', JSON.stringify(consultations));
+      localStorage.setItem('waiting', JSON.stringify(newWaiting));
 
-        localStorage.setItem('availability', quantity - 1);
-        localStorage.setItem('consultations', JSON.stringify(consultations));
-        localStorage.setItem('waiting', JSON.stringify(newWaiting));
-
-        AppendAvailability();
-        AppendConsultations();
-        AppendWaiting();
-      }
+      AppendConsultations();
+      AppendWaiting();
     }
   } catch (error) {
     console.log(error);
