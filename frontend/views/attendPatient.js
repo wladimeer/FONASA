@@ -214,22 +214,9 @@ const AllowAccess = () => {
   const pendingList = JSON.parse(localStorage.getItem('pending')) ?? [];
 
   if (waitingList.length == 0) {
-    let waiting = [];
-    let pending = [];
-
-    if (pendingList.length >= 5) {
-      waiting = pendingList.slice(0, 5);
-      pending = pendingList.slice(5, pendingList.length);
-    } else {
-      waiting = pendingList.slice(0, pendingList.length);
-      pending = [];
-    }
-
-    localStorage.setItem('waiting', JSON.stringify(waiting));
-    localStorage.setItem('pending', JSON.stringify(pending));
-
-    AppendPending();
-    AppendWaiting();
+    WaitingEmpty(pendingList);
+  } else {
+    WaitingNotEmpty(waitingList, pendingList);
   }
 };
 
@@ -312,6 +299,70 @@ const Optimize = () => {
     AppendPending();
     Release();
   }
+};
+
+const WaitingEmpty = (pendingList) => {
+  const urgency = pendingList.find(({ priority }) => priority > 4);
+  const pediatrics = pendingList.find(({ yearOld, priority }) => yearOld >= 1 && yearOld <= 15 && priority <= 4);
+  const general = pendingList.find(({ yearOld, priority }) => yearOld > 16 && priority <= 4);
+
+  let waiting = [];
+  let pending = [];
+
+  urgency != null ? waiting.push(urgency) : null;
+  pediatrics != null ? waiting.push(pediatrics) : null;
+  general != null ? waiting.push(general) : null;
+
+  pending = pendingList.filter((p) => p != urgency && p != pediatrics && p != general);
+
+  localStorage.setItem('waiting', JSON.stringify(waiting));
+  localStorage.setItem('pending', JSON.stringify(pending));
+
+  AppendPending();
+  AppendWaiting();
+};
+
+const WaitingNotEmpty = (waitingList, pendingList) => {
+  const consultations = JSON.parse(localStorage.getItem('consultations'));
+  const [pediatrics, urgency, general] = consultations;
+  let waiting = waitingList ?? [];
+  let pending = pendingList ?? [];
+
+  if (urgency[4] == 1 || urgency[4] == 2) {
+    const patient = pending.find(({ priority }) => priority > 4);
+    const quantity = waiting.filter(({ priority }) => priority > 4).length;
+
+    if (patient != null && quantity == 0) {
+      pending = pending.filter((p) => p != patient);
+      waiting.push(patient);
+    }
+  }
+
+  if (pediatrics[4] == 1 || pediatrics[4] == 2) {
+    const patient = pending.find(({ yearOld, priority }) => yearOld >= 1 && yearOld <= 15 && priority <= 4);
+    const quantity = waiting.filter(({ yearOld, priority }) => yearOld >= 1 && yearOld <= 15 && priority <= 4).length;
+
+    if (patient != null && quantity == 0) {
+      pending = pending.filter((p) => p != patient);
+      waiting.push(patient);
+    }
+  }
+
+  if (general[4] == 1 || general[4] == 2) {
+    const patient = pending.find(({ yearOld, priority }) => yearOld > 16 && priority <= 4);
+    const quantity = waiting.filter(({ yearOld, priority }) => yearOld > 16 && priority <= 4).length;
+
+    if (patient != null && quantity == 0) {
+      pending = pending.filter((p) => p != patient);
+      waiting.push(patient);
+    }
+  }
+
+  localStorage.setItem('waiting', JSON.stringify(waiting));
+  localStorage.setItem('pending', JSON.stringify(pending));
+
+  AppendPending();
+  AppendWaiting();
 };
 
 export default { Fragment, LoadData, Attend, Finalize, Release, Optimize, AllowAccess };
