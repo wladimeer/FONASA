@@ -6,11 +6,11 @@ const base = Base('http://localhost:5000');
 const Patients = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const kids = await base('patient-kid');
-      const youngs = await base('patient-young');
-      const olds = await base('patient-old');
+      const kids = (await base('patient-kid')) ?? [];
+      const youngs = (await base('patient-young')) ?? [];
+      const olds = (await base('patient-old')) ?? [];
 
-      resolve(GenerateArray(kids, youngs, olds));
+      resolve(GenerateArray(kids, youngs, olds) ?? []);
     } catch (error) {
       reject(error);
     }
@@ -20,7 +20,7 @@ const Patients = () => {
 const Smokers = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base('smoker-patients'));
+      resolve((await base('smoker-patients')) ?? []);
     } catch (error) {
       reject(error);
     }
@@ -30,7 +30,7 @@ const Smokers = () => {
 const Consultations = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base('consultations'));
+      resolve((await base('consultations')) ?? []);
     } catch (error) {
       reject(error);
     }
@@ -50,7 +50,7 @@ const FindPatient = (value) => {
 const GreaterNumber = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base('greater-number-of-patients'));
+      resolve((await base('greater-number-of-patients')) ?? []);
     } catch (error) {
       reject(error);
     }
@@ -60,7 +60,7 @@ const GreaterNumber = () => {
 const AttendPatient = (type) => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base(`new-consultation/${type}`));
+      resolve((await base(`new-consultation/${type}`)) ?? 'Error');
     } catch (error) {
       reject(error);
     }
@@ -70,7 +70,7 @@ const AttendPatient = (type) => {
 const FinalizeConsultation = (type) => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base(`finalize-consultation/${type}`));
+      resolve((await base(`finalize-consultation/${type}`)) ?? 'Error');
     } catch (error) {
       reject(error);
     }
@@ -80,7 +80,7 @@ const FinalizeConsultation = (type) => {
 const ReleaseConsultations = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve(await base('release-consultations'));
+      resolve((await base('release-consultations')) ?? 'Error');
     } catch (error) {
       reject(error);
     }

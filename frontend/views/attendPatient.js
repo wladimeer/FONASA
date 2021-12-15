@@ -49,7 +49,7 @@ const Fragment = `
           </thead>
           <tbody id="waiting">
             <tr>
-              <td colspan="7" class="text-center">Sin Pacientes en la Sala</td>
+              <td colspan="7" class="text-center">No se Encontraron Datos</td>
             </tr>
           </tbody>
         </table>
@@ -102,15 +102,14 @@ const AppendWaiting = async () => {
   try {
     const consultations = await Consultations();
     const patients = JSON.parse(localStorage.getItem('waiting')) ?? [];
-
-    const [pediatricsType, urgencyType, generalType] = consultations;
     const content = $('#waiting');
 
-    if (patients.length > 0) {
+    if (patients.length > 0 && consultations.length > 0) {
       content.html('');
 
       const bigger = Math.max(...patients.map(({ yearOld }) => yearOld));
       const olderPatient = patients.find(({ yearOld }) => yearOld == bigger);
+      const [pediatricsType, urgencyType, generalType] = consultations;
 
       patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
         const urgency = `
@@ -154,7 +153,7 @@ const AppendWaiting = async () => {
 };
 
 const AppendPending = () => {
-  const patients = JSON.parse(localStorage.getItem('pending'));
+  const patients = JSON.parse(localStorage.getItem('pending')) ?? [];
   const content = $('#pending');
 
   if (patients.length > 0) {
@@ -271,7 +270,7 @@ const Release = async () => {
 };
 
 const Optimize = () => {
-  const pending = JSON.parse(localStorage.getItem('pending'));
+  const pending = JSON.parse(localStorage.getItem('pending')) ?? [];
 
   if (pending.length > 0) {
     const serious = pending.filter(({ priority }) => {
