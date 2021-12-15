@@ -1,3 +1,5 @@
+import { GreaterNumber } from '../functions/FetchData.js';
+
 const Fragment = `
   <div class="card">
     <div class="card-body">
@@ -23,7 +25,7 @@ const Fragment = `
 
 const LoadData = async () => {
   try {
-    const consultations = await base('greater-number-of-patients');
+    const consultations = await GreaterNumber();
     const content = $('#consultations');
 
     if (consultations.length > 0) {

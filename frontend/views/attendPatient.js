@@ -1,3 +1,6 @@
+import { Patients, Consultations, AttendPatient } from '../functions/FetchData.js';
+import { FinalizeConsultation, ReleaseConsultations } from '../functions/FetchData.js';
+
 const Fragment = `
   <div class="card">
     <div class="card-body">
@@ -75,14 +78,15 @@ const Fragment = `
   </div>
 `;
 
-const LoadData = () => {
+const LoadData = async () => {
   try {
     const exist = localStorage.getItem('pending');
 
     if (!exist) {
-      const pending = [...patients].sort((a, b) => (a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0));
+      const pending = [...(await Patients())].sort((a, b) =>
+        a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0
+      );
 
-      localStorage.setItem('consultations', JSON.stringify(consultations));
       localStorage.setItem('pending', JSON.stringify(pending));
     }
 
@@ -94,65 +98,63 @@ const LoadData = () => {
   }
 };
 
-const AppendWaiting = () => {
-  const consultations = JSON.parse(localStorage.getItem('consultations'));
-  const patients = JSON.parse(localStorage.getItem('waiting')) ?? [];
+const AppendWaiting = async () => {
+  try {
+    const consultations = await Consultations();
+    const patients = JSON.parse(localStorage.getItem('waiting')) ?? [];
 
-  const [pediatricsType, urgencyType, generalType] = consultations;
-  const content = $('#waiting');
+    const [pediatricsType, urgencyType, generalType] = consultations;
+    const content = $('#waiting');
 
-  if (patients.length > 0) {
-    content.html('');
+    if (patients.length > 0) {
+      content.html('');
 
-    const bigger = Math.max(...patients.map(({ yearOld }) => yearOld));
-    const olderPatient = patients.find(({ yearOld }) => yearOld == bigger);
+      const bigger = Math.max(...patients.map(({ yearOld }) => yearOld));
+      const olderPatient = patients.find(({ yearOld }) => yearOld == bigger);
 
-    patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
-      const urgency = `
-        <button ${urgencyType[4] == 2 ? `onclick="Attend(${[id, 2]})"` : 'disabled'}
-          class="btn btn-success"
-        >
-          Atender en Urgencia
-        </button>`;
+      patients.forEach(({ id, name, priority, historyNumber, risk, yearOld }) => {
+        const urgency = `
+          <button ${urgencyType[4] == 2 ? `onclick="Attend(${[id, 2]})"` : 'disabled'} class="btn btn-success">
+            Atender en Urgencia
+          </button>`;
 
-      const pediatrics = `
-        <button ${pediatricsType[4] == 2 ? `onclick="Attend(${[id, 1]})"` : 'disabled'}
-          class="btn btn-success"
-        >
-          Atender en Pediatría
-        </button>`;
+        const pediatrics = `
+          <button ${pediatricsType[4] == 2 ? `onclick="Attend(${[id, 1]})"` : 'disabled'} class="btn btn-success">
+            Atender en Pediatría
+          </button>`;
 
-      const general = `
-        <button ${generalType[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'}
-          class="btn btn-success"
-        >
-          Atender en General Integral
-        </button>`;
+        const general = `
+          <button ${generalType[4] == 2 ? `onclick="Attend(${[id, 3]})"` : 'disabled'} class="btn btn-success">
+            Atender en General Integral
+          </button>`;
 
-      content.append(`
+        content.append(`
+          <tr>
+            <td>${olderPatient.name == name && olderPatient.yearOld >= 41 ? `${name} (Más Anciano)` : name}</td>
+            <td>${yearOld}</td>
+            <td>${priority}</td>
+            <td>${historyNumber}</td>
+            <td>${risk}</td>
+            <th class="text-center">
+              ${yearOld >= 1 && yearOld <= 15 && priority <= 4 ? pediatrics : priority > 4 ? urgency : general}
+            </th>
+          </tr>
+        `);
+      });
+    } else {
+      content.html(`
         <tr>
-          <td>${olderPatient.name == name && olderPatient.yearOld >= 41 ? `${name} (Más Anciano)` : name}</td>
-          <td>${yearOld}</td>
-          <td>${priority}</td>
-          <td>${historyNumber}</td>
-          <td>${risk}</td>
-          <th class="text-center">
-            ${yearOld >= 1 && yearOld <= 15 && priority <= 4 ? pediatrics : priority > 4 ? urgency : general}
-          </th>
+          <td colspan="7" class="text-center">Sin Pacientes Todavía</td>
         </tr>
       `);
-    });
-  } else {
-    content.html(`
-      <tr>
-        <td colspan="7" class="text-center">Sin Pacientes Todavía</td>
-      </tr>
-    `);
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
 const AppendPending = () => {
-  const patients = JSON.parse(localStorage.getItem('pending')) ?? [];
+  const patients = JSON.parse(localStorage.getItem('pending'));
   const content = $('#pending');
 
   if (patients.length > 0) {
@@ -178,34 +180,38 @@ const AppendPending = () => {
   }
 };
 
-const AppendConsultations = () => {
-  const consultations = JSON.parse(localStorage.getItem('consultations')) ?? [];
-  const content = $('#consultations');
+const AppendConsultations = async () => {
+  try {
+    const consultations = await Consultations();
+    const content = $('#consultations');
 
-  if (consultations.length > 0) {
-    content.html('');
+    if (consultations.length > 0) {
+      content.html('');
 
-    consultations.forEach(([_, quantity, specialist, type, state]) => {
-      content.append(`
+      consultations.forEach(([_, quantity, specialist, type, state]) => {
+        content.append(`
+          <tr>
+            <td>${specialist}</td>
+            <td>${quantity}</td>
+            <td>${type == 1 ? 'Pediatría' : type == 2 ? 'Urgencia' : 'General Integral'}</td>
+            <td>${state == 1 ? 'Ocupada' : 'En Espera'}</td>
+            <th class="text-center">
+              <button ${state == 1 ? `onclick = 'Finalize(${type})'` : 'disabled'} class="btn btn-danger">
+                Finalizar Atención
+              </button>
+            </th>
+          </tr>
+        `);
+      });
+    } else {
+      content.html(`
         <tr>
-          <td>${specialist}</td>
-          <td>${quantity}</td>
-          <td>${type == 1 ? 'Pediatría' : type == 2 ? 'Urgencia' : 'General Integral'}</td>
-          <td>${state == 1 ? 'Ocupada' : 'En Espera'}</td>
-          <th class="text-center">
-            <button ${state == 1 ? `onclick = 'Finalize(${type})'` : 'disabled'} class="btn btn-danger">
-              Finalizar Atención
-            </button>
-          </th>
+          <td colspan="6" class="text-center">Sin Consultas Todavía</td>
         </tr>
       `);
-    });
-  } else {
-    content.html(`
-      <tr>
-        <td colspan="6" class="text-center">Sin Consultas Todavía</td>
-      </tr>
-    `);
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -222,15 +228,12 @@ const AllowAccess = () => {
 
 const Attend = async (patient, type) => {
   try {
-    const result = await base(`new-consultation/${type}`);
+    const result = await AttendPatient(type);
 
     if (result == 'Added') {
-      const consultations = await base('consultations');
-
       const waiting = JSON.parse(localStorage.getItem('waiting'));
       const newWaiting = waiting.filter(({ id }) => id != patient);
 
-      localStorage.setItem('consultations', JSON.stringify(consultations));
       localStorage.setItem('waiting', JSON.stringify(newWaiting));
 
       AppendConsultations();
@@ -243,12 +246,9 @@ const Attend = async (patient, type) => {
 
 const Finalize = async (type) => {
   try {
-    const result = await base(`finalize-consultation/${type}`);
+    const result = await FinalizeConsultation(type);
 
     if (result == 'Modified') {
-      const consultations = await base('consultations');
-      localStorage.setItem('consultations', JSON.stringify(consultations));
-
       AppendConsultations();
       AppendWaiting();
     }
@@ -259,12 +259,9 @@ const Finalize = async (type) => {
 
 const Release = async () => {
   try {
-    const result = await base('release-consultations');
+    const result = await ReleaseConsultations();
 
     if (result == 'Released') {
-      const consultations = await base('consultations');
-      localStorage.setItem('consultations', JSON.stringify(consultations));
-
       AppendConsultations();
       AppendWaiting();
     }
@@ -274,7 +271,7 @@ const Release = async () => {
 };
 
 const Optimize = () => {
-  const pending = JSON.parse(localStorage.getItem('pending')) ?? [];
+  const pending = JSON.parse(localStorage.getItem('pending'));
 
   if (pending.length > 0) {
     const serious = pending.filter(({ priority }) => {
@@ -282,15 +279,11 @@ const Optimize = () => {
     });
 
     const childAndOld = pending.filter(({ yearOld, priority }) => {
-      if (priority <= 4) {
-        return (yearOld >= 1 && yearOld <= 15) || yearOld >= 41;
-      }
+      if (priority <= 4) return (yearOld >= 1 && yearOld <= 15) || yearOld >= 41;
     });
 
     const youngs = pending.filter(({ yearOld, priority }) => {
-      if (priority <= 4) {
-        return yearOld >= 16 && yearOld <= 40;
-      }
+      if (priority <= 4) return yearOld >= 16 && yearOld <= 40;
     });
 
     const newPending = [...serious, ...childAndOld, ...youngs];
@@ -322,8 +315,9 @@ const WaitingEmpty = (pendingList) => {
   AppendWaiting();
 };
 
-const WaitingNotEmpty = (waitingList, pendingList) => {
-  const consultations = JSON.parse(localStorage.getItem('consultations'));
+const WaitingNotEmpty = async (waitingList, pendingList) => {
+  const consultations = await Consultations();
+
   const [pediatrics, urgency, general] = consultations;
   let waiting = waitingList ?? [];
   let pending = pendingList ?? [];

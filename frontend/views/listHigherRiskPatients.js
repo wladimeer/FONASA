@@ -1,3 +1,5 @@
+import { FindPatient, Patients } from '../functions/FetchData.js';
+
 const Fragment = `
   <div class="card">
     <div class="card-body">
@@ -32,7 +34,8 @@ const Fragment = `
 
 const LoadData = async (value) => {
   try {
-    const patientFind = await base(`find-patient/${Number(value)}`);
+    const patients = await Patients();
+    const patientFind = await FindPatient(value);
     const patientsAtRisk = $('#patientsAtRisk');
 
     if (patientFind != null) {

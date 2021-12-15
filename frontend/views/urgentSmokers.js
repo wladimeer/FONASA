@@ -1,3 +1,5 @@
+import { Smokers, Patients } from '../functions/FetchData.js';
+
 const Fragment = `
   <div class="card">
     <div class="card-body">
@@ -19,16 +21,22 @@ const Fragment = `
   </div>
 `;
 
-const LoadData = () => {
-  const content = $('#urgentPatients');
+const LoadData = async () => {
+  try {
+    const smokers = await Smokers();
+    const patients = await Patients();
+    const content = $('#urgentPatients');
 
-  if (smokers.length > 0) {
-    content.html('');
+    if (smokers.length > 0) {
+      content.html('');
 
-    smokers.forEach(([smokerId]) => {
-      const { name, priority } = patients.find(({ id }) => id == smokerId);
-      priority > 4 ? content.append(`<tr><td>${name}</td></tr>`) : null;
-    });
+      smokers.forEach(([smokerId]) => {
+        const { name, priority } = patients.find(({ id }) => id == smokerId);
+        priority > 4 ? content.append(`<tr><td>${name}</td></tr>`) : null;
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
